@@ -399,7 +399,7 @@ class App {
     editForm.addEventListener(
       `submit`,
       function (e) {
-        e.preventDefault;
+        e.preventDefault();
         const userInput = +editInput.value;
         const editedValueName = clickedDetail.dataset.detail;
         const paceOrSpeed = clickedWorkout.querySelector(
