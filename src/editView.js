@@ -1,85 +1,90 @@
-export function handleEdits(e) {
-  const clickedDetailData = openEditWindow.call(this, e);
-  clickedDetailData.editInput.focus();
-  submitEdit.call(this, clickedDetailData);
-}
+import { View } from './View.js';
+import { setLocalStorage } from './localStorage.js';
+class EditView extends View {
+  event;
+  workoutsArray = [];
+  detailToEdit;
+  workoutToEdit;
+  detailToEditValue;
 
-function openEditWindow(e) {
-  //choosing the clicked detail
-  const clicked = getDOMElements(e);
-  if (!clicked.detail) return;
-  //preventing other events from firing
-  //preventing calculable values from changing
-  if (isCalcuable(clicked.detail)) {
-    this._showModal(`unchangeable`);
-    return;
+  editForm;
+  editFormInputField;
+  handleEdits(e, workoutsArray) {
+    this.eventTarget = e.target;
+    this.workoutsArray = workoutsArray;
+    this._getDOMElements();
+    if (!this.detailToEdit) return;
+    if (this._isComputed(this.detailToEdit)) {
+      this._showModal(`unchangeable`);
+      return;
+    }
+    this._openEditWindow();
+    this._getEditFormAndInput();
+    this.editFormInputField.focus();
+    this._submitEdit();
   }
-  const html = `<form class ="form--edit">
+  _getDOMElements() {
+    this.detailToEdit = this.eventTarget.closest(`.workout__details`);
+    if (!this.detailToEdit) return;
+
+    this.workoutToEdit = this.detailToEdit.closest(`.workout`);
+    this.detailToEditValue = this.detailToEdit.querySelector(`.workout__value`);
+    console.log(this.workoutsArray);
+  }
+  _openEditWindow() {
+    const html = `<form class ="form--edit">
                       <label></label> 
-                      <input type="text" placeholder="${clicked.value.textContent}"class ="form--edit__input"></input>
+                      <input type="text" placeholder="${this.detailToEditValue.textContent}"class ="form--edit__input"></input>
                       </form>`;
-  clicked.value.insertAdjacentHTML(`afterbegin`, html);
-  clicked.editForm = document.querySelector(`.form--edit`);
-  clicked.editInput = document.querySelector(`.form--edit__input`);
+    this.detailToEditValue.insertAdjacentHTML(`afterbegin`, html);
+  }
+  _isComputed(detailToEdit) {
+    return (
+      detailToEdit.dataset.detail === 'pace' ||
+      detailToEdit.dataset.detail === 'speed'
+    );
+  }
+  _getEditFormAndInput() {
+    this.editForm = document.querySelector(`.form--edit`);
+    this.editFormInputField = document.querySelector(`.form--edit__input`);
+  }
+  _submitEdit() {
+    this.editForm.addEventListener(
+      `submit`,
+      function (e) {
+        e.preventDefault();
+        this._applyChangesToCorrespondingWorkout();
+        setLocalStorage(this.workoutsArray);
+        this.editForm.remove();
+      }.bind(this)
+    );
+  }
+  _applyChangesToCorrespondingWorkout() {
+    const storedWorkout = this._getStoredWorkout();
+    const userInput = this.editFormInputField.value;
+    const editedValueName = this.detailToEdit.dataset.detail;
+    const paceOrSpeed = this.workoutToEdit.querySelector(
+      `#pacespeed .workout__value`
+    );
+    storedWorkout[editedValueName] = this.detailToEditValue.textContent =
+      userInput;
+    switch (storedWorkout.type) {
+      case `running`:
+        storedWorkout.getPace();
+        paceOrSpeed.textContent = storedWorkout.pace;
+        break;
 
-  return clicked;
-}
-function submitEdit(detailData) {
-  detailData.targetObj = getCorrespondingWorkout.call(this, detailData.workout);
-  detailData.editForm.addEventListener(
-    `submit`,
-    function (e) {
-      e.preventDefault();
-      submitEventHandler.call(this, detailData);
-    }.bind(this)
-  );
-}
-
-function submitEventHandler(detailData) {
-  applyChangesToTargetObject(detailData);
-  this._setLocalStorage();
-  detailData.editForm.remove();
-}
-function applyChangesToTargetObject(detailData) {
-  const userInput = detailData.editInput.value;
-  const editedValueName = detailData.detail.dataset.detail;
-  const paceOrSpeed = detailData.workout.querySelector(
-    `#pacespeed .workout__value`
-  );
-  //changing the value in the object
-  detailData.targetObj[editedValueName] = detailData.value.textContent =
-    userInput;
-
-  switch (detailData.targetObj.type) {
-    case `running`:
-      detailData.targetObj.getPace();
-      paceOrSpeed.textContent = detailData.targetObj.pace;
-      break;
-
-    case `cycling`:
-      detailData.targetObj.getSpeed();
-      paceOrSpeed.textContent = detailData.targetObj.speed;
-      break;
+      case `cycling`:
+        storedWorkout.getSpeed();
+        paceOrSpeed.textContent = storedWorkout.speed;
+        break;
+    }
+  }
+  _getStoredWorkout() {
+    return this.workoutsArray.find(
+      workout => workout.id === this.workoutToEdit.dataset.id
+    );
   }
 }
-function isCalcuable(clickedDetail) {
-  return (
-    clickedDetail.dataset.detail === 'pace' ||
-    clickedDetail.dataset.detail === 'speed'
-  );
-}
 
-function getDOMElements(e) {
-  const targetDetail = e.target.closest(`.workout__details`);
-  const DOMElements = {
-    detail: targetDetail,
-    workout: targetDetail.closest(`.workout`),
-    value: targetDetail.querySelector(`.workout__value`),
-  };
-  return DOMElements;
-}
-function getCorrespondingWorkout(clickedWorkout) {
-  return this.workouts.find(
-    workout => workout.id === clickedWorkout.dataset.id
-  );
-}
+export default new EditView();

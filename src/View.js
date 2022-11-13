@@ -11,18 +11,21 @@ export class View {
   overlay = document.querySelector(`.overlay`);
   modalText = document.querySelector(`.modal__text`);
   modalClose = document.querySelector(`.modal__close`);
+  constructor() {
+    this.modalClose.addEventListener(`click`, this._closeModal.bind(this));
+  }
   _showModal(context) {
-    overlay.style.display = `flex`;
+    this.overlay.style.display = `flex`;
     if (context == 'emptyInput')
-      modalText.textContent = 'please, input all data';
+      this.modalText.textContent = 'please, input all data';
     if (context == 'invalidCharacter')
-      modalText.textContent = 'you can only input positive numbers';
+      this.modalText.textContent = 'you can only input positive numbers';
     if (context == 'unchangeable')
-      modalText.textContent = 'you cannot change that';
+      this.modalText.textContent = 'you cannot change that';
   }
   _closeModal(e) {
     e.preventDefault();
-    overlay.style.display = `none`;
-    console.log(e.key);
+    console.log(this.overlay);
+    this.overlay.style.display = `none`;
   }
 }

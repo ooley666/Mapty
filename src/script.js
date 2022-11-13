@@ -1,6 +1,5 @@
 'use strict';
-import { handleEdits } from './editView.js';
-import editViewCl from './editViewCl.js';
+import editView from './editView.js';
 const months = [
   'January',
   'February',
@@ -26,7 +25,6 @@ const sortWrapper = document.querySelector(`.sort__wrapper`);
 const deleteAll = document.querySelector(`.delete__all button`);
 const overlay = document.querySelector(`.overlay`);
 const modalText = document.querySelector(`.modal__text`);
-const modalClose = document.querySelector(`.modal__close`);
 
 class App {
   #map;
@@ -38,17 +36,14 @@ class App {
     //get user's position
     this._getPosition();
 
-    //get data from local storage
     this._getLocalStorage();
-    // console.log(this.workouts);
     //EVENT HANDLERS
     form.addEventListener(`submit`, this._newWorkout.bind(this));
     inputType.addEventListener(`change`, this._toggleElevationField.bind(this));
-    // containerWorkouts.addEventListener(`click`, handleEdits.bind(this));
     containerWorkouts.addEventListener(
       `click`,
       function (e) {
-        editViewCl.handleEdits(e, this.workouts);
+        editView.handleEdits(e, this.workouts);
       }.bind(this)
     );
 
@@ -56,7 +51,6 @@ class App {
     sortWrapper.addEventListener(`click`, this._sortWorkouts.bind(this));
     containerWorkouts.addEventListener(`click`, this._deleteHandler.bind(this));
     deleteAll.addEventListener(`click`, this._deleteAllWorkouts.bind(this));
-    modalClose.addEventListener(`click`, this._closeModal.bind(this));
   }
 
   _setLocalStorage() {
