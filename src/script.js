@@ -1,5 +1,6 @@
 'use strict';
 import { handleEdits } from './editView.js';
+import editViewCl from './editViewCl.js';
 const months = [
   'January',
   'February',
@@ -43,7 +44,14 @@ class App {
     //EVENT HANDLERS
     form.addEventListener(`submit`, this._newWorkout.bind(this));
     inputType.addEventListener(`change`, this._toggleElevationField.bind(this));
-    containerWorkouts.addEventListener(`click`, handleEdits.bind(this));
+    // containerWorkouts.addEventListener(`click`, handleEdits.bind(this));
+    containerWorkouts.addEventListener(
+      `click`,
+      function (e) {
+        editViewCl.handleEdits(e, this.workouts);
+      }.bind(this)
+    );
+
     containerWorkouts.addEventListener(`click`, this._MoveToMarker.bind(this));
     sortWrapper.addEventListener(`click`, this._sortWorkouts.bind(this));
     containerWorkouts.addEventListener(`click`, this._deleteHandler.bind(this));
@@ -83,7 +91,6 @@ class App {
     this._renderAllWorkouts(this.workouts);
     //showing UI elements if there are workouts
     this._showUI();
-    console.log(this.workouts);
   }
   //ARE IN THE vIEW CLASS
   //////////////////////////////
