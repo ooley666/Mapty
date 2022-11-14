@@ -12,9 +12,9 @@ export class View {
   modalText = document.querySelector(`.modal__text`);
   modalClose = document.querySelector(`.modal__close`);
   constructor() {
-    this.modalClose.addEventListener(`click`, this._closeModal.bind(this));
+    this.modalClose.addEventListener(`click`, this.closeModal.bind(this));
   }
-  _showModal(context) {
+  showModal(context) {
     this.overlay.style.display = `flex`;
     if (context == 'emptyInput')
       this.modalText.textContent = 'please, input all data';
@@ -23,7 +23,7 @@ export class View {
     if (context == 'unchangeable')
       this.modalText.textContent = 'you cannot change that';
   }
-  _closeModal(e) {
+  closeModal(e) {
     e.preventDefault();
     console.log(this.overlay);
     this.overlay.style.display = `none`;

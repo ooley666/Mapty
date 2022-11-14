@@ -1,5 +1,8 @@
 'use strict';
-import editView from './editView.js';
+import * as storage from './localStorage.js';
+import { Running, Cycling } from './workoutClasses.js';
+import editView from './views/editView.js';
+import sideBarView from './views/sideBarView.js';
 const months = [
   'January',
   'February',
@@ -36,7 +39,7 @@ class App {
     //get user's position
     this._getPosition();
 
-    this._getLocalStorage();
+    this._init();
     //EVENT HANDLERS
     form.addEventListener(`submit`, this._newWorkout.bind(this));
     inputType.addEventListener(`change`, this._toggleElevationField.bind(this));
@@ -53,53 +56,14 @@ class App {
     deleteAll.addEventListener(`click`, this._deleteAllWorkouts.bind(this));
   }
 
-  _setLocalStorage() {
-    localStorage.setItem(`workouts`, JSON.stringify(this.workouts));
-  }
-  _getLocalStorage() {
-    const data = JSON.parse(localStorage.getItem(`workouts`));
-    if (!data) return;
-    //restoring objects inheritance
-    this.workouts = data.map(work => {
-      if (work.type === `running`) {
-        return new Running(
-          work.distance,
-          work.duration,
-          work.coords,
-          work.cadence,
-          new Date(work.date),
-          work.id
-        );
-      }
-      if (work.type === `cycling`) {
-        return new Cycling(
-          work.distance,
-          work.duration,
-          work.coords,
-          work.elevationGain,
-          new Date(work.date),
-          work.id
-        );
-      }
-    });
+  _init() {
+    this.workouts = storage.getLocalStorage();
+    if (this.workouts.length < 1) return;
     this._renderAllWorkouts(this.workouts);
     //showing UI elements if there are workouts
-    this._showUI();
+    sideBarView.showUI();
   }
-  //ARE IN THE vIEW CLASS
-  //////////////////////////////
-  _showUI() {
-    sortWrapper.classList.remove(`hidden`);
-    sortWrapper.style.display = `flex`;
-    deleteAll.classList.remove(`hidden`);
-  }
-  _hideUI() {
-    sortWrapper.classList.add(`hidden`);
-    sortWrapper.style.removeProperty(`display`);
-    deleteAll.classList.add(`hidden`);
-  }
-  //ARE IN THE vIEW CLASS
-  ////////////////////////////////////
+
   //rebuilding cycling and running objects from local storage
   /////////////////////////////////////////////
   ////MAP CLASS
@@ -123,27 +87,12 @@ class App {
     }).addTo(this.#map);
     this.#map.on(`click`, this._showForm.bind(this));
 
-    this.workouts.forEach(work => this._renderWorkoutMarker(work));
+    this.workouts?.forEach(work => this._renderWorkoutMarker(work));
   }
   ////MAP CLASS
   ////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////
   //ARE IN THE vIEW CLASS
-
-  _showModal(context) {
-    overlay.style.display = `flex`;
-    if (context == 'emptyInput')
-      modalText.textContent = 'please, input all data';
-    if (context == 'invalidCharacter')
-      modalText.textContent = 'you can only input positive numbers';
-    if (context == 'unchangeable')
-      modalText.textContent = 'you cannot change that';
-  }
-  _closeModal(e) {
-    e.preventDefault();
-    overlay.style.display = `none`;
-    console.log(e.key);
-  }
   //callback for map EvList
   _showForm(mapE) {
     this.#mapEvent = mapE;
@@ -304,11 +253,11 @@ class App {
     containerWorkouts.removeChild(clickedWorkout);
     if (this.workouts.length === 0) {
       localStorage.clear();
-      this._hideUI();
+      sideBarView.hideUI();
       return;
     }
     //updating local storage after removing deleted workout
-    this._setLocalStorage();
+    storage.setLocalStorage(this.workouts);
   }
   _deleteWorkout(workoutObjIndex) {
     const [deletedObj] = this.workouts.splice(workoutObjIndex, 1);
@@ -322,7 +271,7 @@ class App {
     this.#markers.forEach(marker => marker.remove());
     this.#markers = [];
     this._removeAllWorkouts();
-    this._hideUI();
+    sideBarView.hideUI();
     localStorage.clear();
   }
   _newWorkout(e) {
@@ -341,7 +290,7 @@ class App {
     //choosing between r and c
 
     if (inputDistance.value == `` || inputDuration.value == ``)
-      return this._showModal('emptyInput');
+      return sideBarView.showModal('emptyInput');
     //////////////
     if (type == `running`) {
       const cadence = +inputCadence.value;
@@ -349,7 +298,7 @@ class App {
         !validInputs(distance, duration, cadence) ||
         !allPositive(distance, duration, cadence)
       )
-        return this._showModal('invalidCharacter');
+        return sideBarView.showModal('invalidCharacter');
       workout = new Running(distance, duration, [lat, lng], cadence);
     }
     //////////////
@@ -359,7 +308,7 @@ class App {
         !validInputs(distance, duration, elevation) ||
         !allPositive(distance, duration)
       )
-        return this._showModal('invalidCharacter');
+        return sideBarView.showModal('invalidCharacter');
       workout = new Cycling(distance, duration, [lat, lng], elevation);
     }
     if (this.workouts.includes(workout)) {
@@ -369,56 +318,12 @@ class App {
     this._renderWorkoutMarker(workout);
     this._closeForm();
     this._renderWorkout(workout);
-    this._showUI();
+    sideBarView.showUI();
     //Set local storage for all the workouts
     // console.log(workout);
     // console.log(this.workouts);
     // console.log(this.#markers);
-    this._setLocalStorage();
-  }
-}
-
-class Workout {
-  date = new Date();
-  id = Date.now() + ``;
-  constructor(
-    distance,
-    duration,
-    coords,
-    date = new Date(),
-    id = Date.now() + ``
-  ) {
-    this.distance = distance; //km
-    this.duration = duration; //min
-    this.coords = coords; //[lat,lng]
-    this.date = date;
-    this.id = id;
-  }
-}
-
-class Running extends Workout {
-  type = `running`;
-  constructor(distance, duration, coords, cadence, _date, _id) {
-    super(distance, duration, coords, _date, _id);
-    this.cadence = cadence;
-    this.getPace();
-  }
-
-  getPace() {
-    this.pace = (this.duration / this.distance).toFixed(1);
-    return this.pace;
-  }
-}
-class Cycling extends Workout {
-  type = `cycling`;
-  constructor(distance, duration, coords, elevationGain, _date, _id) {
-    super(distance, duration, coords, _date, _id);
-    this.elevationGain = elevationGain;
-    this.getSpeed();
-  }
-  getSpeed() {
-    this.speed = (this.distance / (this.duration / 60)).toFixed(1);
-    return this.speed;
+    storage.setLocalStorage(this.workouts);
   }
 }
 

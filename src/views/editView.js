@@ -1,5 +1,5 @@
 import { View } from './View.js';
-import { setLocalStorage } from './localStorage.js';
+import { setLocalStorage } from '../localStorage.js';
 class EditView extends View {
   event;
   workoutsArray = [];
@@ -15,7 +15,7 @@ class EditView extends View {
     this._getDOMElements();
     if (!this.detailToEdit) return;
     if (this._isComputed(this.detailToEdit)) {
-      this._showModal(`unchangeable`);
+      this.showModal(`unchangeable`);
       return;
     }
     this._openEditWindow();
