@@ -42,7 +42,7 @@ class App {
     this._init();
     //EVENT HANDLERS
     form.addEventListener(`submit`, this._newWorkout.bind(this));
-    inputType.addEventListener(`change`, this._toggleElevationField.bind(this));
+    inputType.addEventListener(`change`, sideBarView.toggleCadenceOrElevation);
     containerWorkouts.addEventListener(
       `click`,
       function (e) {
@@ -59,7 +59,7 @@ class App {
   _init() {
     this.workouts = storage.getLocalStorage();
     if (this.workouts.length < 1) return;
-    this._renderAllWorkouts(this.workouts);
+    sideBarView.renderAllWorkouts(this.workouts);
     //showing UI elements if there are workouts
     sideBarView.showUI();
   }
@@ -85,7 +85,7 @@ class App {
       attribution:
         '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     }).addTo(this.#map);
-    this.#map.on(`click`, this._showForm.bind(this));
+    this.#map.on(`click`, this._renderFormAndSaveMapEvent.bind(this));
 
     this.workouts?.forEach(work => this._renderWorkoutMarker(work));
   }
@@ -94,34 +94,11 @@ class App {
   //////////////////////////////////////////////////////////
   //ARE IN THE vIEW CLASS
   //callback for map EvList
-  _showForm(mapE) {
+  _renderFormAndSaveMapEvent(mapE) {
     this.#mapEvent = mapE;
-    form.style.display = `grid`;
-    form.classList.remove(`hidden`);
-    inputDistance.focus();
-  }
-  //clearing and hiding the form
-  _closeForm() {
-    inputDistance.value =
-      inputCadence.value =
-      inputDuration.value =
-      inputElevation.value =
-        ``;
-
-    form.style.display = `none`;
-    form.classList.add(`hidden`);
-    // setTimeout(() => {
-    //   form.style.display = `grid`;
-    // }, 1000);
+    sideBarView.renderForm();
   }
 
-  _toggleElevationField() {
-    [
-      inputCadence.closest(`.form__row`),
-      inputElevation.closest(`.form__row`),
-    ].forEach(el => el.classList.toggle(`form__row--hidden`));
-    console.log(this.#map);
-  }
   _sortWorkouts(e) {
     //choosing clicked element
     const clicked = e.target.closest(`.sort__element`);
@@ -130,80 +107,21 @@ class App {
     const type = clicked.dataset.type;
     //sorting by date
     if (type === `date`) {
-      this._removeAllWorkouts();
+      sideBarView.removeAllWorkouts();
       //this should be the original array, cause it is already sorted chronologically
-      this._renderAllWorkouts(this.workouts);
+      sideBarView.renderAllWorkouts(this.workouts);
       return;
     }
     //copying workouts
     const workoutsCopy = this.workouts.slice();
     workoutsCopy.sort((a, b) => a[type] - b[type]);
     //updating UI
-    this._removeAllWorkouts();
-    this._renderAllWorkouts(workoutsCopy);
+    sideBarView.removeAllWorkouts();
+    sideBarView.renderAllWorkouts(workoutsCopy);
   }
-  _removeAllWorkouts() {
-    containerWorkouts
-      .querySelectorAll(`.workout`)
-      .forEach(work => work.parentNode.removeChild(work));
-  }
-  _renderAllWorkouts(workoutsArr) {
-    workoutsArr.forEach(workout => {
-      workout.date = new Date(workout.date);
-      this._renderWorkout(workout);
-    });
-  }
-  //displaying workout list
-  _renderWorkout(workout) {
-    const isRunning = workout => workout.type === `running`;
-    const html = `<li class="workout workout--${workout.type}" data-id="${
-      workout.id
-    }">
-          <h2 class="workout__title">${
-            workout.type.slice(0, 1).toUpperCase() + workout.type.slice(1)
-          }
-            on ${months[workout.date.getMonth()]} ${workout.date.getDate()}</h2>
-           <div class ="delete__icon"> <img src ="img/trash_bin.png"  alt ="trash bin icon"></div>
-          <div class="workout__details" data-detail="distance">
-            <span class="workout__icon">${
-              isRunning(workout) ? '🏃‍♂️' : '🚴‍♀️'
-            }</span>
-            <span class="workout__value">${workout.distance}</span>
-            <span class="workout__unit">km</span>
-          </div>
-          <div class="workout__details" data-detail="duration">
-            <span class="workout__icon">⏱</span>
-            <span class="workout__value">${workout.duration}</span>
-            <span class="workout__unit">min</span>
-          </div>
-          <div class="workout__details" id = "pacespeed" data-detail = "${
-            isRunning(workout) ? 'pace' : 'speed'
-          }">
-            <span class="workout__icon">⚡️</span>
-            <span class="workout__value">${
-              isRunning(workout) ? workout.pace : workout.speed
-            }</span>
-            <span class="workout__unit">${
-              isRunning(workout) ? 'min/km' : 'km/h'
-            }</span>
-          </div>
-          <div class="workout__details" data-detail="${
-            isRunning(workout) ? 'cadence' : 'elevationGain'
-          }">
-            <span class="workout__icon">${
-              isRunning(workout) ? '🦶🏼' : '⛰'
-            }</span>
-            <span class="workout__value">${
-              isRunning(workout) ? workout.cadence : workout.elevationGain
-            }</span>
-            <span class="workout__unit">${
-              isRunning(workout) ? 'spm' : 'm'
-            }</span>
-          </div>
-        </li>`;
 
-    form.insertAdjacentHTML(`afterend`, html);
-  }
+  //displaying workout list
+
   //ARE IN THE vIEW CLASS
   // /////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////
@@ -270,7 +188,7 @@ class App {
     this.workouts = [];
     this.#markers.forEach(marker => marker.remove());
     this.#markers = [];
-    this._removeAllWorkouts();
+    sideBarView.removeAllWorkouts();
     sideBarView.hideUI();
     localStorage.clear();
   }
@@ -316,8 +234,8 @@ class App {
     }
     this.workouts.push(workout);
     this._renderWorkoutMarker(workout);
-    this._closeForm();
-    this._renderWorkout(workout);
+    sideBarView.hideForm();
+    sideBarView.renderWorkout(workout);
     sideBarView.showUI();
     //Set local storage for all the workouts
     // console.log(workout);
