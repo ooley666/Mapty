@@ -1,2 +1,4 @@
 misc
-src/.prettierrc
+.parcel-cache
+dist
+node_modules
