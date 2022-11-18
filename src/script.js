@@ -5,7 +5,6 @@ import editView from './views/editView.js';
 import sideBarView from './views/sideBarView.js';
 import { MONTHS, URL_LAYER_TEMPLATE } from './config.js';
 
-const containerWorkouts = document.querySelector('.workouts');
 const inputType = document.querySelector('.form__input--type');
 const inputDistance = document.querySelector('.form__input--distance');
 const inputDuration = document.querySelector('.form__input--duration');
@@ -27,11 +26,11 @@ class App {
 
   _init() {
     this.#workouts = storage.getLocalStorage();
+    this._subscribeToEventListeners();
     if (this.#workouts.length < 1) return;
     sideBarView.renderAllWorkouts(this.#workouts);
     //showing UI elements if there are workouts
     sideBarView.showUI();
-    this._subscribeToEventListeners();
   }
   _subscribeToEventListeners() {
     sideBarView.addFormSubmitHandler(this._newWorkout.bind(this));
@@ -145,9 +144,9 @@ class App {
     const clickedObjIndex = this.#workouts.findIndex(
       workout => workout.id === clickedWorkout.dataset.id
     );
-    this._deleteWorkout(clickedObjIndex);
+    this._deleteWorkoutMarker(clickedObjIndex);
     //removing workout tab from the DOM
-    containerWorkouts.removeChild(clickedWorkout);
+    sideBarView.containerWorkouts.removeChild(clickedWorkout);
     if (this.#workouts.length === 0) {
       localStorage.clear();
       sideBarView.hideUI();
@@ -156,8 +155,7 @@ class App {
     //updating local storage after removing deleted workout
     storage.setLocalStorage(this.#workouts);
   }
-  _deleteWorkout(workoutObjIndex) {
-    const [deletedObj] = this.#workouts.splice(workoutObjIndex, 1);
+  _deleteWorkoutMarker(workoutObjIndex) {
     //finding marker in the markers array and removing it from the map (it has inherited method `remove`)
     this.#markers[workoutObjIndex].remove();
     //removing marker from the markers array
