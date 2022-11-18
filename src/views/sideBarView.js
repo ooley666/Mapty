@@ -1,18 +1,5 @@
 import { View } from './View.js';
-const months = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
-];
+import { MONTHS } from '../config.js';
 class SideBarView extends View {
   showUI() {
     this.sortWrapper.classList.remove(`hidden`);
@@ -56,8 +43,8 @@ class SideBarView extends View {
           <h2 class="workout__title">${
             workout.type.slice(0, 1).toUpperCase() + workout.type.slice(1)
           }
-            on ${months[workout.date.getMonth()]} ${workout.date.getDate()}</h2>
-           <div class ="delete__icon"> <img src ="img/trash_bin.png"  alt ="trash bin icon"></div>
+            on ${MONTHS[workout.date.getMonth()]} ${workout.date.getDate()}</h2>
+           <div class ="delete__icon"> <img src ="trash_bin.png"  alt ="trash bin icon"></div>
           <div class="workout__details" data-detail="distance">
             <span class="workout__icon">${
               isRunning(workout) ? '🏃‍♂️' : '🚴‍♀️'
@@ -107,6 +94,27 @@ class SideBarView extends View {
     this.containerWorkouts
       .querySelectorAll(`.workout`)
       .forEach(work => work.parentNode.removeChild(work));
+  }
+  addFormSubmitHandler(handler) {
+    this.form.addEventListener(`submit`, handler);
+  }
+  addTypeChangeHandler() {
+    this.inputType.addEventListener(
+      `change`,
+      this.toggleCadenceOrElevation.bind(this)
+    );
+  }
+  addMoveToMarkerHandler(handler) {
+    this.containerWorkouts.addEventListener(`click`, handler);
+  }
+  addSortHandler(handler) {
+    this.sortWrapper.addEventListener(`click`, handler);
+  }
+  addDeleteHandler(handler) {
+    this.containerWorkouts.addEventListener(`click`, handler);
+  }
+  addAllDeleteHandler(handler) {
+    this.deleteAll.addEventListener(`click`, handler);
   }
 }
 

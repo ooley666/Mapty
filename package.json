@@ -1,0 +1,21 @@
+{
+  "name": "mapty",
+  "version": "1.0.0",
+  "description": "An app for trackin your running/cycling activities with an integrated map API by LEaflet",
+  "scripts": {
+    "start": "parcel src/index.html"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ooley666/mapty.git"
+  },
+  "author": "Maksym Lavrov",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ooley666/mapty/issues"
+  },
+  "homepage": "https://github.com/ooley666/mapty#readme",
+  "devDependencies": {
+    "parcel": "^2.8.0"
+  }
+}

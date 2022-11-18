@@ -3,71 +3,50 @@ import * as storage from './localStorage.js';
 import { Running, Cycling } from './workoutClasses.js';
 import editView from './views/editView.js';
 import sideBarView from './views/sideBarView.js';
-const months = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
-];
-const form = document.querySelector('.form');
+import { MONTHS, URL_LAYER_TEMPLATE } from './config.js';
+
 const containerWorkouts = document.querySelector('.workouts');
 const inputType = document.querySelector('.form__input--type');
 const inputDistance = document.querySelector('.form__input--distance');
 const inputDuration = document.querySelector('.form__input--duration');
 const inputCadence = document.querySelector('.form__input--cadence');
 const inputElevation = document.querySelector('.form__input--elevation');
-const sortWrapper = document.querySelector(`.sort__wrapper`);
-const deleteAll = document.querySelector(`.delete__all button`);
-const overlay = document.querySelector(`.overlay`);
-const modalText = document.querySelector(`.modal__text`);
 
 class App {
   #map;
   #mapEvent;
-  workouts = [];
+  #workouts = [];
   #markers = [];
   //fire as the page loads
   constructor() {
     //get user's position
-    this._getPosition();
-
+    this._renderMap();
     this._init();
     //EVENT HANDLERS
-    form.addEventListener(`submit`, this._newWorkout.bind(this));
-    inputType.addEventListener(`change`, sideBarView.toggleCadenceOrElevation);
-    containerWorkouts.addEventListener(
-      `click`,
-      function (e) {
-        editView.handleEdits(e, this.workouts);
-      }.bind(this)
-    );
-
-    containerWorkouts.addEventListener(`click`, this._MoveToMarker.bind(this));
-    sortWrapper.addEventListener(`click`, this._sortWorkouts.bind(this));
-    containerWorkouts.addEventListener(`click`, this._deleteHandler.bind(this));
-    deleteAll.addEventListener(`click`, this._deleteAllWorkouts.bind(this));
   }
 
   _init() {
-    this.workouts = storage.getLocalStorage();
-    if (this.workouts.length < 1) return;
-    sideBarView.renderAllWorkouts(this.workouts);
+    this.#workouts = storage.getLocalStorage();
+    if (this.#workouts.length < 1) return;
+    sideBarView.renderAllWorkouts(this.#workouts);
     //showing UI elements if there are workouts
     sideBarView.showUI();
+    this._subscribeToEventListeners();
   }
+  _subscribeToEventListeners() {
+    sideBarView.addFormSubmitHandler(this._newWorkout.bind(this));
+    sideBarView.addTypeChangeHandler();
+    editView.addEditButtonHandler(this.#workouts);
+    sideBarView.addMoveToMarkerHandler(this._MoveToMarker.bind(this));
+    sideBarView.addSortHandler(this._sortWorkouts.bind(this));
+    sideBarView.addDeleteHandler(this._deleteHandler.bind(this));
 
+    sideBarView.addAllDeleteHandler(this._deleteAllWorkouts.bind(this));
+  }
   //rebuilding cycling and running objects from local storage
   /////////////////////////////////////////////
   ////MAP CLASS
-  _getPosition() {
+  _renderMap() {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(this._loadMap.bind(this), () =>
         alert(`Could not get your position`)
@@ -81,13 +60,13 @@ class App {
     const coords = [latitude, longitude];
     //leaflet code
     this.#map = L.map('map').setView(coords, 14);
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    L.tileLayer(URL_LAYER_TEMPLATE, {
       attribution:
         '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     }).addTo(this.#map);
     this.#map.on(`click`, this._renderFormAndSaveMapEvent.bind(this));
 
-    this.workouts?.forEach(work => this._renderWorkoutMarker(work));
+    this.#workouts?.forEach(work => this._renderWorkoutMarker(work));
   }
   ////MAP CLASS
   ////////////////////////////////////////////////////////////
@@ -109,11 +88,11 @@ class App {
     if (type === `date`) {
       sideBarView.removeAllWorkouts();
       //this should be the original array, cause it is already sorted chronologically
-      sideBarView.renderAllWorkouts(this.workouts);
+      sideBarView.renderAllWorkouts(this.#workouts);
       return;
     }
     //copying workouts
-    const workoutsCopy = this.workouts.slice();
+    const workoutsCopy = this.#workouts.slice();
     workoutsCopy.sort((a, b) => a[type] - b[type]);
     //updating UI
     sideBarView.removeAllWorkouts();
@@ -142,7 +121,7 @@ class App {
       .setPopupContent(
         `${workout.type === `running` ? '🏃‍♂️' : '🚴‍♀️'} ${
           workout.type.slice(0, 1).toUpperCase() + workout.type.slice(1)
-        } on ${months[workout.date.getMonth()]} ${workout.date.getDate()}`
+        } on ${MONTHS[workout.date.getMonth()]} ${workout.date.getDate()}`
       )
       .openPopup();
     this.#markers.push(marker);
@@ -151,7 +130,7 @@ class App {
   _MoveToMarker(e) {
     const clicked = e.target.closest(`.workout`);
     if (!clicked) return;
-    const clickedObj = this.workouts.find(
+    const clickedObj = this.#workouts.find(
       workout => workout.id === clicked.dataset.id
     );
     const coords = clickedObj.coords;
@@ -163,29 +142,29 @@ class App {
     if (!clickedButton) return;
     //finding clicked workout in the workouts array
     const clickedWorkout = clickedButton.closest(`.workout`);
-    const clickedObjIndex = this.workouts.findIndex(
+    const clickedObjIndex = this.#workouts.findIndex(
       workout => workout.id === clickedWorkout.dataset.id
     );
     this._deleteWorkout(clickedObjIndex);
     //removing workout tab from the DOM
     containerWorkouts.removeChild(clickedWorkout);
-    if (this.workouts.length === 0) {
+    if (this.#workouts.length === 0) {
       localStorage.clear();
       sideBarView.hideUI();
       return;
     }
     //updating local storage after removing deleted workout
-    storage.setLocalStorage(this.workouts);
+    storage.setLocalStorage(this.#workouts);
   }
   _deleteWorkout(workoutObjIndex) {
-    const [deletedObj] = this.workouts.splice(workoutObjIndex, 1);
+    const [deletedObj] = this.#workouts.splice(workoutObjIndex, 1);
     //finding marker in the markers array and removing it from the map (it has inherited method `remove`)
     this.#markers[workoutObjIndex].remove();
     //removing marker from the markers array
     this.#markers.splice(workoutObjIndex, 1);
   }
   _deleteAllWorkouts() {
-    this.workouts = [];
+    this.#workouts = [];
     this.#markers.forEach(marker => marker.remove());
     this.#markers = [];
     sideBarView.removeAllWorkouts();
@@ -229,19 +208,19 @@ class App {
         return sideBarView.showModal('invalidCharacter');
       workout = new Cycling(distance, duration, [lat, lng], elevation);
     }
-    if (this.workouts.includes(workout)) {
+    if (this.#workouts.includes(workout)) {
       return workout;
     }
-    this.workouts.push(workout);
+    this.#workouts.push(workout);
     this._renderWorkoutMarker(workout);
     sideBarView.hideForm();
     sideBarView.renderWorkout(workout);
     sideBarView.showUI();
     //Set local storage for all the workouts
     // console.log(workout);
-    // console.log(this.workouts);
+    // console.log(this.#workouts);
     // console.log(this.#markers);
-    storage.setLocalStorage(this.workouts);
+    storage.setLocalStorage(this.#workouts);
   }
 }
 

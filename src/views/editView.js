@@ -6,9 +6,17 @@ class EditView extends View {
   detailToEdit;
   workoutToEdit;
   detailToEditValue;
-
   editForm;
   editFormInputField;
+
+  addEditButtonHandler(workoutsArray) {
+    this.containerWorkouts.addEventListener(
+      `click`,
+      function (e) {
+        this.handleEdits(e, workoutsArray);
+      }.bind(this)
+    );
+  }
   handleEdits(e, workoutsArray) {
     this.eventTarget = e.target;
     this.workoutsArray = workoutsArray;
