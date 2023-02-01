@@ -25,7 +25,6 @@ export class View {
   }
   closeModal(e) {
     e.preventDefault();
-    console.log(this.overlay);
     this.overlay.style.display = `none`;
   }
 }

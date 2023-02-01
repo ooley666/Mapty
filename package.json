@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "description": "An app for trackin your running/cycling activities with an integrated map API by LEaflet",
   "scripts": {
-    "start": "parcel src/index.html"
+    "start": "parcel index.html",
+    "build": "parcel build index.html --no-scope-hoist --dist-dir ./dist"
   },
   "repository": {
     "type": "git",

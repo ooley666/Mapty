@@ -100,10 +100,6 @@ class App {
 
   //displaying workout list
 
-  //ARE IN THE vIEW CLASS
-  // /////////////////////////////////////////////////////////////
-  //////////////////////////////////////////////////////////////
-  ///aRE IN THE MAP CLASS
   //displaying marker
   _renderWorkoutMarker(workout) {
     const marker = L.marker(workout.coords)
@@ -214,10 +210,7 @@ class App {
     sideBarView.hideForm();
     sideBarView.renderWorkout(workout);
     sideBarView.showUI();
-    //Set local storage for all the workouts
-    // console.log(workout);
-    // console.log(this.#workouts);
-    // console.log(this.#markers);
+
     storage.setLocalStorage(this.#workouts);
   }
 }

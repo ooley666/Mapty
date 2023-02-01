@@ -37,7 +37,6 @@ class EditView extends View {
 
     this.workoutToEdit = this.detailToEdit.closest(`.workout`);
     this.detailToEditValue = this.detailToEdit.querySelector(`.workout__value`);
-    console.log(this.workoutsArray);
   }
   _openEditWindow() {
     const html = `<form class ="form--edit">
