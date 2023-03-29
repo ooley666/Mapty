@@ -8,7 +8,7 @@ An app for trackin your running/cycling activities with an integrated map by Lea
 
 One of the practical tasks from _"The Complete JavaScript Course"_ by Jonas Schmedtmann. Development period: July/August 2022. This project helped me understand OOP principles as well as practice using APIs (Geolocation and Leaflet).
 
-Using MVC structire wasn`t the task, I just decided to practice refactoring on my own later, when I finished the key functionality.
+Using MVC structure wasn`t the task, I just decided to practice refactoring on my own later, when I finished the key functionality.
 
 ---
 
